@@ -1,0 +1,179 @@
+from typing import Dict, List, Optional
+
+
+# -------------------------------------
+# CSP MODEL FOR INTELLIGENT PROCTORING
+# -------------------------------------
+
+# Variables: Exam sessions that need proctors
+variables = ["Exam1", "Exam2", "Exam3", "Exam4"]
+
+# Domains: Possible proctors for each exam
+domains = {
+    "Exam1": ["Proctor_A", "Proctor_B", "Proctor_C"],
+    "Exam2": ["Proctor_A", "Proctor_B", "Proctor_C"],
+    "Exam3": ["Proctor_A", "Proctor_B", "Proctor_C"],
+    "Exam4": ["Proctor_A", "Proctor_B", "Proctor_C"]
+}
+
+# Exam timings
+exam_time = {
+    "Exam1": "10AM",
+    "Exam2": "10AM",
+    "Exam3": "11AM",
+    "Exam4": "11AM"
+}
+
+# Risk level of exams
+risk_level = {
+    "Exam1": "Low",
+    "Exam2": "High",
+    "Exam3": "Medium",
+    "Exam4": "High"
+}
+
+# Senior proctors
+senior_proctors = ["Proctor_A", "Proctor_C"]
+
+
+def is_consistent(exam: str, proctor: str, assignment: Dict[str, str]) -> bool:
+    """
+    Checks if assigning a proctor to an exam satisfies all constraints.
+    """
+
+    # Constraint 1: Same proctor cannot monitor two exams at same time
+    for assigned_exam, assigned_proctor in assignment.items():
+        if assigned_proctor == proctor and exam_time[assigned_exam] == exam_time[exam]:
+            print(f"Constraint Failed: {proctor} is already assigned at {exam_time[exam]}")
+            return False
+
+    # Constraint 2: High risk exams must be assigned to senior proctors
+    if risk_level[exam] == "High" and proctor not in senior_proctors:
+        print(f"Constraint Failed: {exam} is High Risk, so {proctor} is not allowed")
+        return False
+
+    return True
+
+
+def select_unassigned_variable(assignment: Dict[str, str]) -> Optional[str]:
+    """
+    MRV Heuristic:
+    Selects the variable with minimum remaining valid values.
+    """
+
+    unassigned = [v for v in variables if v not in assignment]
+
+    if not unassigned:
+        return None
+
+    # MRV: choose exam with smallest domain
+    return min(unassigned, key=lambda var: len(domains[var]))
+
+
+def order_domain_values(exam: str) -> List[str]:
+    """
+    LCV Heuristic:
+    Here we keep senior proctors first because they can handle high-risk exams.
+    """
+
+    return sorted(domains[exam], key=lambda p: p not in senior_proctors)
+
+
+def forward_check(exam: str, proctor: str, assignment: Dict[str, str]) -> bool:
+    """
+    Forward Checking:
+    Checks whether future exams still have at least one possible proctor.
+    """
+
+    temp_assignment = assignment.copy()
+    temp_assignment[exam] = proctor
+
+    for future_exam in variables:
+        if future_exam not in temp_assignment:
+            possible = False
+
+            for future_proctor in domains[future_exam]:
+                if is_consistent(future_exam, future_proctor, temp_assignment):
+                    possible = True
+                    break
+
+            if not possible:
+                print(f"Forward Checking Failed: No valid proctor left for {future_exam}")
+                return False
+
+    return True
+
+
+def backtracking_search(assignment: Dict[str, str]) -> Optional[Dict[str, str]]:
+    """
+    Backtracking algorithm for solving CSP.
+    """
+
+    if len(assignment) == len(variables):
+        return assignment
+
+    exam = select_unassigned_variable(assignment)
+
+    print(f"\nSelecting variable using MRV: {exam}")
+
+    for proctor in order_domain_values(exam):
+        print(f"Trying {exam} -> {proctor}")
+
+        if is_consistent(exam, proctor, assignment):
+            if forward_check(exam, proctor, assignment):
+                assignment[exam] = proctor
+                result = backtracking_search(assignment)
+
+                if result is not None:
+                    return result
+
+                print(f"Backtracking from {exam} -> {proctor}")
+                del assignment[exam]
+
+    return None
+
+
+def min_conflicts_demo():
+    """
+    Local Search CSP idea:
+    Min-conflicts tries to reduce constraint violations step by step.
+    """
+
+    print("\nMin-Conflicts Local Search Idea:")
+    print("1. Start with a random proctor assignment.")
+    print("2. Count conflicts such as same-time clashes or wrong proctor for high-risk exam.")
+    print("3. Change one conflicting assignment to reduce conflicts.")
+    print("4. Repeat until conflicts become zero.")
+
+
+def sat_intuition():
+    """
+    SAT intuition:
+    CSP can be converted into True/False variables.
+    """
+
+    print("\nSAT Intuition:")
+    print("Example: Exam1_Proctor_A = True means Proctor_A is assigned to Exam1.")
+    print("Constraints are written as logical rules.")
+    print("A valid solution satisfies all rules.")
+
+
+def main():
+    print("CO3: CSP Based Intelligent Exam Proctoring")
+    print("------------------------------------------")
+
+    solution = backtracking_search({})
+
+    print("\nFinal CSP Solution:")
+    if solution:
+        for exam, proctor in solution.items():
+            print(f"{exam} at {exam_time[exam]} with {risk_level[exam]} risk -> {proctor}")
+    else:
+        print("No valid solution found.")
+
+    min_conflicts_demo()
+    sat_intuition()
+
+
+if __name__ == "__main__":
+    main()
