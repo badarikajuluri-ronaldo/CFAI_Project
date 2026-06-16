@@ -1,0 +1,191 @@
+from collections import deque
+import random
+
+print("======================================")
+print("CO6 : HYBRID AI EXAM PROCTORING SYSTEM")
+print("======================================\n")
+
+
+# ----------------------------------
+# SEARCH MODULE (CO2)
+# ----------------------------------
+
+graph = {
+    "Start": ["Face_Check", "Eye_Check"],
+    "Face_Check": ["Tab_Check"],
+    "Eye_Check": ["Tab_Check"],
+    "Tab_Check": ["Risk_Analysis"],
+    "Risk_Analysis": ["Decision"],
+    "Decision": []
+}
+
+def bfs(start, goal):
+
+    queue = deque([[start]])
+    visited = set()
+
+    while queue:
+
+        path = queue.popleft()
+        node = path[-1]
+
+        if node == goal:
+            return path
+
+        if node not in visited:
+
+            visited.add(node)
+
+            for neighbor in graph[node]:
+                queue.append(path + [neighbor])
+
+    return []
+
+
+# ----------------------------------
+# CSP MODULE (CO3)
+# ----------------------------------
+
+def schedule_exam():
+
+    students = {
+        "Student1": "9 AM",
+        "Student2": "10 AM",
+        "Student3": "11 AM"
+    }
+
+    return students
+
+
+# ----------------------------------
+# BAYESIAN RISK (CO5)
+# ----------------------------------
+
+def cheating_probability():
+
+    face_missing = True
+    tab_switch = True
+    looking_away = False
+
+    score = 0
+
+    if face_missing:
+        score += 40
+
+    if tab_switch:
+        score += 35
+
+    if looking_away:
+        score += 25
+
+    return score
+
+
+# ----------------------------------
+# MINIMAX DECISION (CO4)
+# ----------------------------------
+
+def decision_module(risk):
+
+    if risk >= 70:
+        return "STRICT MONITORING"
+
+    elif risk >= 40:
+        return "FACULTY REVIEW"
+
+    else:
+        return "NORMAL"
+
+
+# ----------------------------------
+# EXPLAINABLE AI
+# ----------------------------------
+
+def reasoning_trace():
+
+    print("\nEXPLAINABLE REASONING TRACE")
+    print("---------------------------")
+
+    print("1. Face Missing Detected")
+    print("2. Tab Switching Detected")
+    print("3. Risk Increased")
+    print("4. Bayesian Analysis Performed")
+    print("5. Decision Module Activated")
+
+
+# ----------------------------------
+# FAILURE ANALYSIS
+# ----------------------------------
+
+def failure_analysis():
+
+    print("\nFAILURE ANALYSIS")
+    print("----------------")
+
+    print("Possible False Positives:")
+    print("- Poor Internet")
+    print("- Camera Failure")
+    print("- Lighting Problems")
+
+    print("\nPossible False Negatives:")
+    print("- Hidden Notes")
+    print("- Secondary Device Usage")
+
+
+# ----------------------------------
+# ETHICS
+# ----------------------------------
+
+def ethics():
+
+    print("\nETHICS & LIMITATIONS")
+    print("--------------------")
+
+    print("1. AI may be biased.")
+    print("2. Camera quality affects accuracy.")
+    print("3. Bayesian probability is not certainty.")
+    print("4. Human verification is required.")
+
+
+# ----------------------------------
+# MAIN PROGRAM
+# ----------------------------------
+
+def main():
+
+    print("SEARCH MODULE")
+    print("-------------")
+
+    path = bfs("Start", "Decision")
+    print("Monitoring Path:")
+    print(path)
+
+    print("\nCSP EXAM SCHEDULE")
+    print("-----------------")
+
+    schedule = schedule_exam()
+
+    for student, slot in schedule.items():
+        print(student, "->", slot)
+
+    print("\nBAYESIAN RISK ANALYSIS")
+    print("----------------------")
+
+    risk = cheating_probability()
+    print("Risk Score =", risk)
+
+    print("\nDECISION SYSTEM")
+    print("----------------")
+
+    final_decision = decision_module(risk)
+    print("Decision =", final_decision)
+
+    reasoning_trace()
+
+    failure_analysis()
+
+    ethics()
+
+
+if __name__ == "__main__":
+    main()
