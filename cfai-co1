@@ -1,0 +1,133 @@
+from dataclasses import dataclass
+from typing import List, Dict
+
+
+# -------------------------------
+# PEAS MODEL
+# -------------------------------
+
+peas_model = {
+    "Performance Measure": [
+        "Detect cheating accurately",
+        "Reduce false alerts",
+        "Generate clear proctoring report",
+        "Monitor student continuously"
+    ],
+    "Environment": [
+        "Online exam platform",
+        "Student webcam",
+        "Browser activity",
+        "Audio surroundings"
+    ],
+    "Actuators": [
+        "Show warning",
+        "Record suspicious activity",
+        "Increase risk score",
+        "Generate final report"
+    ],
+    "Sensors": [
+        "Camera input",
+        "Microphone input",
+        "Tab switch detector",
+        "Face detection system"
+    ]
+}
+
+
+# -------------------------------
+# STATE REPRESENTATION
+# -------------------------------
+
+@dataclass
+class ExamState:
+    face_detected: bool
+    multiple_faces: bool
+    looking_away: bool
+    tab_switched: bool
+    noise_detected: bool
+    risk_score: int = 0
+
+
+# -------------------------------
+# RULE-BASED AGENT
+# -------------------------------
+
+class ProctoringAgent:
+    def __init__(self):
+        self.logs: List[str] = []
+
+    def analyze(self, state: ExamState) -> ExamState:
+        self.logs.append("Starting exam monitoring analysis...")
+
+        if not state.face_detected:
+            state.risk_score += 30
+            self.logs.append("Face not detected: +30 risk")
+
+        if state.multiple_faces:
+            state.risk_score += 40
+            self.logs.append("Multiple faces detected: +40 risk")
+
+        if state.looking_away:
+            state.risk_score += 15
+            self.logs.append("Student looking away: +15 risk")
+
+        if state.tab_switched:
+            state.risk_score += 20
+            self.logs.append("Tab switching detected: +20 risk")
+
+        if state.noise_detected:
+            state.risk_score += 10
+            self.logs.append("Background noise detected: +10 risk")
+
+        self.logs.append(f"Final risk score: {state.risk_score}")
+        return state
+
+    def decision(self, state: ExamState) -> str:
+        if state.risk_score >= 60:
+            return "High Risk: Exam should be reviewed immediately"
+        elif state.risk_score >= 30:
+            return "Medium Risk: Faculty review required"
+        else:
+            return "Low Risk: Student activity is normal"
+
+    def show_logs(self):
+        print("\nStep-by-step Trace Log:")
+        for log in self.logs:
+            print("-", log)
+
+
+# -------------------------------
+# TESTING SMALL UNIT
+# -------------------------------
+
+def test_agent():
+    sample_state = ExamState(
+        face_detected=True,
+        multiple_faces=False,
+        looking_away=True,
+        tab_switched=True,
+        noise_detected=False
+    )
+
+    agent = ProctoringAgent()
+    result_state = agent.analyze(sample_state)
+    final_decision = agent.decision(result_state)
+
+    print("PEAS MODEL:")
+    for key, value in peas_model.items():
+        print(f"\n{key}:")
+        for item in value:
+            print("-", item)
+
+    agent.show_logs()
+
+    print("\nFinal Decision:")
+    print(final_decision)
+
+
+# -------------------------------
+# MAIN PROGRAM
+# -------------------------------
+
+if __name__ == "__main__":
+    test_agent()
