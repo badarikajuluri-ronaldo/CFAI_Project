@@ -1,0 +1,242 @@
+import random
+
+
+# ------------------------------------
+# CO5 : BAYESIAN PROCTORING SYSTEM
+# ------------------------------------
+
+print("CO5 : Bayesian Network Based Exam Proctoring")
+print("--------------------------------------------")
+
+
+# PRIOR PROBABILITY
+
+P_CHEATING = 0.20
+P_NOT_CHEATING = 0.80
+
+
+# CONDITIONAL PROBABILITIES (CPT)
+
+P_FACE_MISSING_GIVEN_CHEATING = 0.70
+P_FACE_MISSING_GIVEN_NOT_CHEATING = 0.10
+
+P_TAB_SWITCH_GIVEN_CHEATING = 0.80
+P_TAB_SWITCH_GIVEN_NOT_CHEATING = 0.15
+
+P_LOOKING_AWAY_GIVEN_CHEATING = 0.75
+P_LOOKING_AWAY_GIVEN_NOT_CHEATING = 0.20
+
+
+# ------------------------------------
+# BAYES RULE
+# ------------------------------------
+
+def bayes_cheating(face_missing, tab_switch, looking_away):
+
+    if face_missing:
+        p_face_cheat = P_FACE_MISSING_GIVEN_CHEATING
+        p_face_not = P_FACE_MISSING_GIVEN_NOT_CHEATING
+    else:
+        p_face_cheat = 1 - P_FACE_MISSING_GIVEN_CHEATING
+        p_face_not = 1 - P_FACE_MISSING_GIVEN_NOT_CHEATING
+
+    if tab_switch:
+        p_tab_cheat = P_TAB_SWITCH_GIVEN_CHEATING
+        p_tab_not = P_TAB_SWITCH_GIVEN_NOT_CHEATING
+    else:
+        p_tab_cheat = 1 - P_TAB_SWITCH_GIVEN_CHEATING
+        p_tab_not = 1 - P_TAB_SWITCH_GIVEN_NOT_CHEATING
+
+    if looking_away:
+        p_look_cheat = P_LOOKING_AWAY_GIVEN_CHEATING
+        p_look_not = P_LOOKING_AWAY_GIVEN_NOT_CHEATING
+    else:
+        p_look_cheat = 1 - P_LOOKING_AWAY_GIVEN_CHEATING
+        p_look_not = 1 - P_LOOKING_AWAY_GIVEN_NOT_CHEATING
+
+    numerator = (
+        P_CHEATING *
+        p_face_cheat *
+        p_tab_cheat *
+        p_look_cheat
+    )
+
+    denominator = numerator + (
+        P_NOT_CHEATING *
+        p_face_not *
+        p_tab_not *
+        p_look_not
+    )
+
+    probability = numerator / denominator
+
+    return probability
+
+
+# ------------------------------------
+# VARIABLE ELIMINATION IDEA
+# ------------------------------------
+
+def variable_elimination_demo():
+
+    print("\nVariable Elimination Concept")
+    print("-----------------------------")
+
+    print("Evidence:")
+    print("Face Missing = True")
+    print("Tab Switch = True")
+    print("Looking Away = True")
+
+    result = bayes_cheating(True, True, True)
+
+    print(f"\nP(Cheating | Evidence) = {result:.4f}")
+
+
+# ------------------------------------
+# BELIEF PROPAGATION
+# ------------------------------------
+
+def belief_propagation_demo():
+
+    print("\nBelief Propagation Intuition")
+    print("-----------------------------")
+
+    print("Face Missing influences Cheating.")
+    print("Cheating influences Final Risk.")
+    print("Evidence propagates through network.")
+
+
+# ------------------------------------
+# REJECTION SAMPLING
+# ------------------------------------
+
+def rejection_sampling(samples=1000):
+
+    accepted = 0
+    cheating_count = 0
+
+    for _ in range(samples):
+
+        cheating = random.random() < P_CHEATING
+
+        face = random.random() < (
+            P_FACE_MISSING_GIVEN_CHEATING
+            if cheating
+            else P_FACE_MISSING_GIVEN_NOT_CHEATING
+        )
+
+        if face:
+
+            accepted += 1
+
+            if cheating:
+                cheating_count += 1
+
+    if accepted == 0:
+        return 0
+
+    return cheating_count / accepted
+
+
+# ------------------------------------
+# LIKELIHOOD WEIGHTING
+# ------------------------------------
+
+def likelihood_weighting():
+
+    print("\nLikelihood Weighting Concept")
+    print("-----------------------------")
+
+    print("Instead of rejecting samples,")
+    print("we assign weights based on evidence probability.")
+
+
+# ------------------------------------
+# MARKOV CHAIN
+# ------------------------------------
+
+def markov_chain_demo():
+
+    print("\nMarkov Chain Tracking")
+    print("----------------------")
+
+    states = [
+        "Normal",
+        "Looking Away",
+        "Tab Switch",
+        "High Risk"
+    ]
+
+    current = "Normal"
+
+    print("Student State Sequence:")
+
+    for i in range(5):
+
+        current = random.choice(states)
+        print(f"Time {i+1}: {current}")
+
+
+# ------------------------------------
+# HMM INTUITION
+# ------------------------------------
+
+def hmm_demo():
+
+    print("\nHidden Markov Model Intuition")
+    print("------------------------------")
+
+    print("Hidden State : Cheating / Not Cheating")
+    print("Observed State : Face Missing, Eye Movement, Tab Switch")
+    print("AI estimates hidden cheating behaviour from observations.")
+
+
+# ------------------------------------
+# SENSOR FUSION
+# ------------------------------------
+
+def sensor_fusion_demo():
+
+    print("\nSensor Fusion")
+    print("----------------")
+
+    print("Sensor 1 : Webcam")
+    print("Sensor 2 : Eye Tracking")
+    print("Sensor 3 : Browser Monitoring")
+
+    probability = bayes_cheating(
+        True,
+        True,
+        True
+    )
+
+    print(f"\nCombined Risk Probability = {probability:.4f}")
+
+
+# ------------------------------------
+# MAIN
+# ------------------------------------
+
+def main():
+
+    variable_elimination_demo()
+
+    belief_propagation_demo()
+
+    sampling_result = rejection_sampling()
+
+    print("\nRejection Sampling Result")
+    print("--------------------------")
+    print(f"Estimated Probability = {sampling_result:.4f}")
+
+    likelihood_weighting()
+
+    markov_chain_demo()
+
+    hmm_demo()
+
+    sensor_fusion_demo()
+
+
+if __name__ == "__main__":
+    main()
