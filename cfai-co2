@@ -1,0 +1,249 @@
+from collections import deque
+import heapq
+import time
+import tracemalloc
+
+
+# Graph for Intelligent Exam Proctoring Logic
+# Each node represents a monitoring state.
+# Cost represents seriousness / investigation effort.
+
+graph = {
+    "Exam Start": [("Face Check", 1), ("Browser Check", 2)],
+    "Face Check": [("Face Present", 1), ("No Face Detected", 4), ("Multiple Faces", 5)],
+    "Browser Check": [("Same Tab", 1), ("Tab Switched", 4)],
+    "Face Present": [("Eye Tracking", 2)],
+    "No Face Detected": [("High Alert", 5)],
+    "Multiple Faces": [("High Alert", 5)],
+    "Same Tab": [("Audio Check", 2)],
+    "Tab Switched": [("Medium Alert", 3)],
+    "Eye Tracking": [("Looking Normal", 1), ("Looking Away", 4)],
+    "Audio Check": [("Normal Noise", 1), ("Suspicious Noise", 3)],
+    "Looking Normal": [("Low Risk", 1)],
+    "Looking Away": [("Medium Alert", 3)],
+    "Suspicious Noise": [("Medium Alert", 3)],
+    "Normal Noise": [("Low Risk", 1)],
+    "Low Risk": [("Report Generated", 1)],
+    "Medium Alert": [("Review Required", 3)],
+    "High Alert": [("Review Required", 2)],
+    "Report Generated": [],
+    "Review Required": []
+}
+
+
+# Heuristic values for Greedy and A*
+# Lower value means closer to goal.
+heuristic = {
+    "Exam Start": 7,
+    "Face Check": 6,
+    "Browser Check": 6,
+    "Face Present": 5,
+    "No Face Detected": 2,
+    "Multiple Faces": 2,
+    "Same Tab": 5,
+    "Tab Switched": 3,
+    "Eye Tracking": 4,
+    "Audio Check": 4,
+    "Looking Normal": 6,
+    "Looking Away": 3,
+    "Suspicious Noise": 3,
+    "Normal Noise": 6,
+    "Low Risk": 7,
+    "Medium Alert": 1,
+    "High Alert": 1,
+    "Report Generated": 8,
+    "Review Required": 0
+}
+
+
+def profile_algorithm(func, start, goal):
+    tracemalloc.start()
+    start_time = time.time()
+
+    path, cost, expansions = func(start, goal)
+
+    end_time = time.time()
+    current, peak = tracemalloc.get_traced_memory()
+    tracemalloc.stop()
+
+    return {
+        "path": path,
+        "cost": cost,
+        "expansions": expansions,
+        "runtime": round(end_time - start_time, 6),
+        "peak_memory_kb": round(peak / 1024, 2)
+    }
+
+
+def bfs(start, goal):
+    queue = deque([(start, [start], 0)])
+    visited = set()
+    expansions = 0
+
+    while queue:
+        node, path, cost = queue.popleft()
+
+        if node in visited:
+            continue
+
+        visited.add(node)
+        expansions += 1
+
+        if node == goal:
+            return path, cost, expansions
+
+        for neighbor, edge_cost in graph[node]:
+            if neighbor not in visited:
+                queue.append((neighbor, path + [neighbor], cost + edge_cost))
+
+    return [], 0, expansions
+
+
+def dfs(start, goal):
+    stack = [(start, [start], 0)]
+    visited = set()
+    expansions = 0
+
+    while stack:
+        node, path, cost = stack.pop()
+
+        if node in visited:
+            continue
+
+        visited.add(node)
+        expansions += 1
+
+        if node == goal:
+            return path, cost, expansions
+
+        for neighbor, edge_cost in reversed(graph[node]):
+            if neighbor not in visited:
+                stack.append((neighbor, path + [neighbor], cost + edge_cost))
+
+    return [], 0, expansions
+
+
+def ucs(start, goal):
+    priority_queue = [(0, start, [start])]
+    visited = set()
+    expansions = 0
+
+    while priority_queue:
+        cost, node, path = heapq.heappop(priority_queue)
+
+        if node in visited:
+            continue
+
+        visited.add(node)
+        expansions += 1
+
+        if node == goal:
+            return path, cost, expansions
+
+        for neighbor, edge_cost in graph[node]:
+            if neighbor not in visited:
+                heapq.heappush(priority_queue, (cost + edge_cost, neighbor, path + [neighbor]))
+
+    return [], 0, expansions
+
+
+def greedy(start, goal):
+    priority_queue = [(heuristic[start], start, [start], 0)]
+    visited = set()
+    expansions = 0
+
+    while priority_queue:
+        h, node, path, cost = heapq.heappop(priority_queue)
+
+        if node in visited:
+            continue
+
+        visited.add(node)
+        expansions += 1
+
+        if node == goal:
+            return path, cost, expansions
+
+        for neighbor, edge_cost in graph[node]:
+            if neighbor not in visited:
+                heapq.heappush(priority_queue, (heuristic[neighbor], neighbor, path + [neighbor], cost + edge_cost))
+
+    return [], 0, expansions
+
+
+def astar(start, goal):
+    priority_queue = [(heuristic[start], 0, start, [start])]
+    visited = set()
+    expansions = 0
+
+    while priority_queue:
+        f, cost, node, path = heapq.heappop(priority_queue)
+
+        if node in visited:
+            continue
+
+        visited.add(node)
+        expansions += 1
+
+        if node == goal:
+            return path, cost, expansions
+
+        for neighbor, edge_cost in graph[node]:
+            if neighbor not in visited:
+                new_cost = cost + edge_cost
+                f_value = new_cost + heuristic[neighbor]
+                heapq.heappush(priority_queue, (f_value, new_cost, neighbor, path + [neighbor]))
+
+    return [], 0, expansions
+
+
+def print_result(name, result):
+    print("\n" + "=" * 50)
+    print(name)
+    print("=" * 50)
+    print("Path:")
+    print(" -> ".join(result["path"]))
+    print("Total Cost:", result["cost"])
+    print("Node Expansions:", result["expansions"])
+    print("Runtime:", result["runtime"], "seconds")
+    print("Peak Memory:", result["peak_memory_kb"], "KB")
+
+
+def explain_heuristic():
+    print("\nHeuristic Explanation:")
+    print("The heuristic estimates how close each monitoring state is to Review Required.")
+    print("Review Required has heuristic 0.")
+    print("Alert states have low heuristic values because they are close to the goal.")
+    print("Normal states have higher heuristic values because they are farther from review.")
+
+    print("\nAdmissibility Intuition:")
+    print("A heuristic is admissible if it never overestimates the actual remaining cost.")
+
+    print("\nConsistency Intuition:")
+    print("A heuristic is consistent if h(n) <= cost(n, next) + h(next).")
+
+    print("\nMemory-Bounded Variant:")
+    print("IDA* is a memory-bounded version of A* that uses depth-first search with increasing cost limits.")
+
+
+def main():
+    start = "Exam Start"
+    goal = "Review Required"
+
+    algorithms = [
+        ("BFS Search", bfs),
+        ("DFS Search", dfs),
+        ("Uniform Cost Search", ucs),
+        ("Greedy Best First Search", greedy),
+        ("A* Search", astar)
+    ]
+
+    for name, algorithm in algorithms:
+        result = profile_algorithm(algorithm, start, goal)
+        print_result(name, result)
+
+    explain_heuristic()
+
+
+if __name__ == "__main__":
+    main()
