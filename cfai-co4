@@ -1,0 +1,182 @@
+import math
+
+
+game_tree = {
+    "Start Monitoring": ["Strict Monitoring", "Moderate Monitoring", "Light Monitoring"],
+
+    "Strict Monitoring": ["Face Check Strong", "Tab Check Strong"],
+    "Moderate Monitoring": ["Eye Check Medium", "Audio Check Medium"],
+    "Light Monitoring": ["Basic Check", "Random Check"],
+
+    "Face Check Strong": ["Cheating Detected", "False Alarm"],
+    "Tab Check Strong": ["Tab Switch Caught", "Normal Student Warned"],
+
+    "Eye Check Medium": ["Looking Away Found", "Missed Suspicion"],
+    "Audio Check Medium": ["Noise Detected", "No Issue"],
+
+    "Basic Check": ["Cheating Missed", "Normal Passed"],
+    "Random Check": ["Random Suspicion Found", "Cheating Escaped"]
+}
+
+
+utility = {
+    "Cheating Detected": 100,
+    "False Alarm": -30,
+    "Tab Switch Caught": 80,
+    "Normal Student Warned": -20,
+
+    "Looking Away Found": 60,
+    "Missed Suspicion": -50,
+    "Noise Detected": 40,
+    "No Issue": 20,
+
+    "Cheating Missed": -100,
+    "Normal Passed": 30,
+    "Random Suspicion Found": 50,
+    "Cheating Escaped": -80
+}
+
+
+def evaluation_function(node):
+    if node in utility:
+        return utility[node]
+
+    estimated_values = {
+        "Start Monitoring": 50,
+        "Strict Monitoring": 70,
+        "Moderate Monitoring": 40,
+        "Light Monitoring": 10,
+        "Face Check Strong": 80,
+        "Tab Check Strong": 70,
+        "Eye Check Medium": 50,
+        "Audio Check Medium": 35,
+        "Basic Check": 5,
+        "Random Check": 20
+    }
+
+    return estimated_values.get(node, 0)
+
+
+def minimax(node, depth, maximizing_player):
+    if node in utility or depth == 0:
+        return evaluation_function(node), node
+
+    if maximizing_player:
+        best_value = -math.inf
+        best_action = None
+
+        for child in game_tree[node]:
+            value, _ = minimax(child, depth - 1, False)
+
+            if value > best_value:
+                best_value = value
+                best_action = child
+
+        return best_value, best_action
+
+    else:
+        best_value = math.inf
+        best_action = None
+
+        for child in game_tree[node]:
+            value, _ = minimax(child, depth - 1, True)
+
+            if value < best_value:
+                best_value = value
+                best_action = child
+
+        return best_value, best_action
+
+
+def alpha_beta(node, depth, alpha, beta, maximizing_player):
+    if node in utility or depth == 0:
+        return evaluation_function(node), node
+
+    if maximizing_player:
+        best_value = -math.inf
+        best_action = None
+
+        for child in game_tree[node]:
+            value, _ = alpha_beta(child, depth - 1, alpha, beta, False)
+
+            if value > best_value:
+                best_value = value
+                best_action = child
+
+            alpha = max(alpha, best_value)
+
+            if beta <= alpha:
+                print(f"Pruned branch at MAX node: {node}")
+                break
+
+        return best_value, best_action
+
+    else:
+        best_value = math.inf
+        best_action = None
+
+        for child in game_tree[node]:
+            value, _ = alpha_beta(child, depth - 1, alpha, beta, True)
+
+            if value < best_value:
+                best_value = value
+                best_action = child
+
+            beta = min(beta, best_value)
+
+            if beta <= alpha:
+                print(f"Pruned branch at MIN node: {node}")
+                break
+
+        return best_value, best_action
+
+
+def iterative_deepening_demo(start_node):
+    print("\nIterative Deepening Concept:")
+
+    for depth in range(1, 4):
+        value, action = minimax(start_node, depth, True)
+        print(f"Depth {depth}: Best Action = {action}, Utility = {value}")
+
+
+def expectimax_concept():
+    print("\nExpectimax Concept:")
+    print("If student behavior is random, we use expected utility instead of minimum utility.")
+    print("Example: Student may switch tabs with 30% probability and stay normal with 70% probability.")
+
+
+def policy_selection():
+    print("\nPolicy Selection:")
+    print("The AI selects the monitoring policy with the highest utility value.")
+
+
+def bounded_rationality():
+    print("\nBounded Rationality:")
+    print("AI cannot search infinitely deep, so it uses depth limits and evaluation functions.")
+
+
+def main():
+    start = "Start Monitoring"
+    depth_limit = 3
+
+    print("CO4: Multi-Agent Reasoning for Intelligent Exam Proctoring")
+    print("----------------------------------------------------------")
+
+    print("\nUsing Minimax Algorithm:")
+    value, action = minimax(start, depth_limit, True)
+    print("Best Action:", action)
+    print("Utility Value:", value)
+
+    print("\nUsing Alpha-Beta Pruning:")
+    value_ab, action_ab = alpha_beta(start, depth_limit, -math.inf, math.inf, True)
+    print("Best Action:", action_ab)
+    print("Utility Value:", value_ab)
+
+    iterative_deepening_demo(start)
+    expectimax_concept()
+    bounded_rationality()
+    policy_selection()
+
+
+if __name__ == "__main__":
+    main()
